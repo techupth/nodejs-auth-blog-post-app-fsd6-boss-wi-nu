@@ -6,7 +6,13 @@ function jwtInterceptor() {
     //  ให้เขียน Logic ในการแนบ Token เข้าไปใน Header ของ Request
     // เมื่อมีการส่ง Request จาก Client ไปหา Server
     // ภายใน Callback Function axios.interceptors.request.use
-
+    const hasToken = Boolean(localStorage.getItem("token"));
+    if (hasToken) {
+      req.headers = {
+        ...req.headers,
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+    }
     return req;
   });
 
@@ -21,6 +27,21 @@ function jwtInterceptor() {
       // ภายใน Error Callback Function ของ axios.interceptors.response.use
 
       return Promise.reject(error);
+    }
+  );
+
+  axios.interceptors.response.use(
+    (req) => {
+      return req;
+    },
+    (error) => {
+      if (
+        error.response.status === 401 &&
+        error.response.statusText === "Unauthorized"
+      ) {
+        localStorage.removeItem("token");
+        location.replace("/");
+      }
     }
   );
 }
